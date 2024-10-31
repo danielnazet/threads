@@ -21,7 +21,6 @@ export default function Index() {
 	});
 
 	const data = useQuery(api.users.getAllUsers);
-	console.log("Index data", data);
 
 	const handleFacebookLogin = async () => {
 		try {

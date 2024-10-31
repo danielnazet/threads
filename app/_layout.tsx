@@ -52,9 +52,9 @@ export default function RootLayout() {
 			tokenCache={tokenCache}
 		>
 			<ClerkLoaded>
-				<ConvexProvider client={convex}>
+				<ConvexProviderWithClerk client={convex} useAuth={useAuth}>
 					<InitialLayout />
-				</ConvexProvider>
+				</ConvexProviderWithClerk>
 			</ClerkLoaded>
 		</ClerkProvider>
 	);

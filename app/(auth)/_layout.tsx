@@ -1,9 +1,11 @@
 import React from "react";
 import { Stack } from "expo-router";
-import { TouchableOpacity } from "react-native";
+import { Text, TouchableOpacity } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
+import { useRouter } from "expo-router";
 
 const Layout = () => {
+	const router = useRouter();
 	return (
 		<Stack
 			screenOptions={{
@@ -26,6 +28,18 @@ const Layout = () => {
 								size={30}
 								color="black"
 							/>
+						</TouchableOpacity>
+					),
+				}}
+			/>
+			<Stack.Screen
+				name="(modal)/edit-profile"
+				options={{
+					presentation: "modal",
+					title: "Edit Profile",
+					headerLeft: () => (
+						<TouchableOpacity onPress={() => router.dismiss()}>
+							<Text>Cancel</Text>
 						</TouchableOpacity>
 					),
 				}}

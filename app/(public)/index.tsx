@@ -20,7 +20,7 @@ export default function Index() {
 		strategy: "oauth_google",
 	});
 
-	const data = useQuery(api.users.getAllUsers);
+	// const data = useQuery(api.users.getAllUsers);
 
 	const handleFacebookLogin = async () => {
 		try {

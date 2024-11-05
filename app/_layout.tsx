@@ -10,9 +10,9 @@ import {
 	DMSans_700Bold,
 } from "@expo-google-fonts/dm-sans";
 import { useEffect } from "react";
-
 import { ConvexReactClient } from "convex/react";
 import { ConvexProviderWithClerk } from "convex/react-clerk";
+import * as Sentry from "@sentry/react-native";
 
 const convex = new ConvexReactClient(process.env.EXPO_PUBLIC_CONVEX_URL!, {
 	unsavedChangesWarning: false,
@@ -26,6 +26,26 @@ if (!clerkPublishableKey) {
 }
 
 LogBox.ignoreLogs(["Clerk: Clerk has been loaded with development keys."]);
+
+const routingInstrumentation = new Sentry.ReactNavigationInstrumentation();
+
+Sentry.init({
+	attachScreenshot: true,
+	debug: true,
+	dsn: process.env.EXPO_PUBLIC_SENTRY_DSN,
+	tracesSampleRate: 1.0,
+	_experiments: {
+		profileSampleRate: 1.0,
+		replaysSessionSampleRate: 1.0,
+		replaysOnErrorSampleRate: 1.0,
+	},
+	integrations: [
+		new Sentry.ReactNativeTracing({
+			routingInstrumentation,
+			enableNativeFramesTracking: true,
+		}),
+	],
+});
 
 //Prevent auto hide splash screen
 SplashScreen.preventAutoHideAsync();
@@ -60,7 +80,7 @@ const InitialLayout = () => {
 	return <Slot />;
 };
 
-export default function RootLayout() {
+const RootLayout = () => {
 	return (
 		<ClerkProvider
 			publishableKey={clerkPublishableKey!}
@@ -73,4 +93,6 @@ export default function RootLayout() {
 			</ClerkLoaded>
 		</ClerkProvider>
 	);
-}
+};
+
+export default Sentry.wrap(RootLayout);

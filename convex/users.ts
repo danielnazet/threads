@@ -1,12 +1,18 @@
 import { v } from "convex/values";
-import { internalMutation, query } from "./_generated/server";
+import {
+	internalMutation,
+	mutation,
+	query,
+	QueryCtx,
+} from "./_generated/server";
+import { Id } from "./_generated/dataModel";
 
-export const getAllUsers = query({
-	args: {},
-	handler: async (ctx) => {
-		return await ctx.db.query("users").collect();
-	},
-});
+// export const getAllUsers = query({
+// args: {},
+// handler: async (ctx) => {
+// return await ctx.db.query("users").collect();
+// },
+// });
 
 export const createUser = internalMutation({
 	args: {
@@ -28,3 +34,94 @@ export const createUser = internalMutation({
 		return userId;
 	},
 });
+
+export const getUserByClerkId = query({
+	args: {
+		clerkId: v.optional(v.string()),
+	},
+	handler: async (ctx, args) => {
+		const user = await ctx.db
+			.query("users")
+			.filter((q) => q.eq(q.field("clerkId"), args.clerkId))
+			.unique();
+
+		if (!user?.imageUrl || user.imageUrl.startsWith("http")) {
+			return user;
+		}
+
+		const url = await ctx.storage.getUrl(user.imageUrl as Id<"_storage">);
+
+		return {
+			...user,
+			imageUrl: url,
+		};
+	},
+});
+
+export const getUserById = query({
+	args: {
+		userId: v.id("users"),
+	},
+	handler: async (ctx, args) => {
+		const user = await ctx.db.get(args.userId);
+		if (!user?.imageUrl || user.imageUrl.startsWith("http")) {
+			return user;
+		}
+
+		const url = await ctx.storage.getUrl(user.imageUrl as Id<"_storage">);
+
+		return {
+			...user,
+			imageUrl: url,
+		};
+	},
+});
+export const updateImage = mutation({
+	args: { storageId: v.id("_storage"), _id: v.id("users") },
+	handler: async (ctx, args) => {
+		await ctx.db.patch(args._id, {
+			imageUrl: args.storageId,
+		});
+	},
+});
+
+export const updateUser = mutation({
+	args: {
+		_id: v.id("users"),
+		bio: v.optional(v.string()),
+		websiteUrl: v.optional(v.string()),
+		profilePicture: v.optional(v.string()),
+		pushToken: v.optional(v.string()),
+	},
+	handler: async (ctx, args) => {
+		await getCurrentUserOrThrow(ctx);
+		return await ctx.db.patch(args._id, args);
+	},
+});
+
+export const generateUploadUrl = mutation(async (ctx) => {
+	await getCurrentUserOrThrow(ctx);
+
+	return await ctx.storage.generateUploadUrl();
+});
+
+export async function getCurrentUserOrThrow(ctx: QueryCtx) {
+	const userRecord = await getCurrentUser(ctx);
+	if (!userRecord) throw new Error("Can't get current user");
+	return userRecord;
+}
+
+export async function getCurrentUser(ctx: QueryCtx) {
+	const identity = await ctx.auth.getUserIdentity();
+	if (identity === null) {
+		return null;
+	}
+	return await userByExternalId(ctx, identity.subject);
+}
+
+async function userByExternalId(ctx: QueryCtx, externalId: string) {
+	return await ctx.db
+		.query("users")
+		.withIndex("byClerkId", (q) => q.eq("clerkId", externalId))
+		.unique();
+}

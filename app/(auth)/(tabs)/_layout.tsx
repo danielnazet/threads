@@ -109,17 +109,13 @@ const Layout = () => {
 				name="profile"
 				options={{
 					title: "Profile",
+					headerShown: false,
 					tabBarIcon: ({ color, size, focused }) => (
 						<Ionicons
 							name={focused ? "person" : "person-outline"}
 							color={color}
 							size={size}
 						/>
-					),
-					headerRight: () => (
-						<TouchableOpacity onPress={() => signOut()}>
-							<Ionicons name="log-out" size={24} />
-						</TouchableOpacity>
 					),
 				}}
 			/>

@@ -4,7 +4,7 @@ import React from "react";
 const Page = () => {
 	return (
 		<View>
-			<Text>Create Threads</Text>
+			<Text>Create Thread</Text>
 		</View>
 	);
 };
